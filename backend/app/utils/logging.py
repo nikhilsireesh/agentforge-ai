@@ -1,0 +1,10 @@
+"""Central logging setup so every module logs in the same format."""
+
+import logging
+
+
+def configure_logging(level: str = "INFO") -> None:
+    logging.basicConfig(
+        level=level,
+        format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+    )

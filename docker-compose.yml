@@ -1,0 +1,36 @@
+# Run the full platform:  docker compose up --build   →  http://localhost:8080
+#
+# Note: inside Compose the test sandbox is disabled (SANDBOX_MODE=disabled), because
+# launching sibling containers would require mounting the Docker socket, which gives
+# the backend root-equivalent access to the host. Run the backend directly on the host
+# (see README) to execute generated tests in the sandbox. Skipped tests are always
+# reported as skipped, never as passed.
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    env_file:
+      - path: backend/.env
+        required: false
+    environment:
+      APP_ENV: production
+      SANDBOX_MODE: disabled
+      CORS_ORIGINS: http://localhost:8080
+    volumes:
+      - agentforge-data:/data
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  agentforge-data:

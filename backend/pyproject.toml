@@ -1,0 +1,34 @@
+[project]
+name = "agentforge-backend"
+version = "0.1.0"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["alembic/versions", ".e2e"]
+
+[tool.ruff.lint]
+# E/F: pycodestyle + pyflakes, I: import sorting, B: bugbear, UP: modern syntax
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's dependency-injection style uses function calls in defaults.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Path"]
+
+[tool.ruff.lint.per-file-ignores]
+# Markdown templates: long lines are part of the rendered documents.
+"app/services/docs_renderer.py" = ["E501"]
+
+[tool.ruff.lint.isort]
+# Our local `alembic/` folder would otherwise make Ruff treat the alembic package as our code.
+known-third-party = ["alembic"]
+known-first-party = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = [
+    # Third-party warning from Starlette's TestClient; not caused by our code.
+    "ignore:The anyio.abc.BlockingPortal alias is deprecated:DeprecationWarning",
+]

@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Secrets / local config
+.env
+.env.*
+!.env.example
+
+# Local databases
+*.db
+*.sqlite3
+
+# Node / frontend
+node_modules/
+dist/
+.vite/
+
+# Generated output (keep the folder, not its contents)
+generated_projects/*
+!generated_projects/.gitkeep
+
+# Playwright
+test-results/
+playwright-report/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
+
+# Test run data
+backend/.e2e/
+frontend/test-results/
+frontend/playwright-report/
+backend/checkpoints.db*
