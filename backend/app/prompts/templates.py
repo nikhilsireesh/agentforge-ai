@@ -97,8 +97,15 @@ Hard constraints (the code is tested in an offline sandbox):
 - Never include secrets, shell commands, subprocess calls, eval/exec, or network access.
 - Each artifact: file_path (relative), file_type, description, full content, dependencies,
   proposed_action ("create" or "update").
-If correction feedback is provided, fix every reported defect and return the COMPLETE set of
-files again (not just the changed ones).
+- Python 3.11 style: built-in generics (list[str], dict[str, int]) and `X | None`.
+  Never use typing.List/Dict/Optional. Every name you use must be defined or imported.
+- Tests: for every resource cover create, list, get, update, delete, a 404 for a missing id
+  and a 422 for invalid input. Reset in-memory storage between tests (pytest fixture).
+- Keep the scope to what the architecture lists; authentication may be documented as a
+  limitation of the prototype rather than half-implemented.
+If correction feedback is provided: make the SMALLEST change that fixes each reported failing
+check, keep every other file byte-for-byte identical, do not add new features, and return the
+COMPLETE set of files again (not just the changed ones).
 """
 
 REVIEWER = """
@@ -111,7 +118,9 @@ evidence; and recommend corrections.
 Rules:
 - You are given the REAL results of static checks and test execution. Base your conclusions on
   them. Never claim a test passed unless it appears as passed in the execution results.
-- Use severity "critical" only for defects that make the software unusable or insecure.
+- Use severity "critical" only for defects in the delivered code that make it crash, lose
+  data or expose a security hole. Features that are missing or out of prototype scope (for
+  example authentication not yet implemented) are category "scope" with severity "medium".
 - review_status = "changes_requested" if any executed check failed or a critical issue exists.
 """
 

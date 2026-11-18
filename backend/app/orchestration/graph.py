@@ -155,7 +155,7 @@ def review_testing_node(state: AgentForgeState) -> dict[str, Any]:
     result, run_id = _run_agent(state, "review_testing", _context(
         state, artifacts=state.get("generated_artifacts", []), outcomes=outcome_dicts))
     review = result.output
-    critical = any(issue["severity"] == "critical" for issue in review.get("issues", []))
+    critical = sum(issue["severity"] == "critical" for issue in review.get("issues", []))
     report = {
         **review,
         # Counts below come ONLY from real execution, never from the model.
@@ -164,16 +164,47 @@ def review_testing_node(state: AgentForgeState) -> dict[str, Any]:
         "passed_tests": passed,
         "failed_tests": failed,
         "skipped_tests": skipped,
-        "correction_required": failed > 0 or critical,
+        # Only real failures trigger automatic correction. Critical review findings are
+        # shown to the human at final approval instead: an LLM opinion alone must not
+        # force rewrites of code that passes its checks.
+        "correction_required": failed > 0,
+        "critical_issues": critical,
         "code_version": version,
         "iteration": attempts,
     }
-    if report["correction_required"]:
+    if failed or critical:
         report["review_status"] = "changes_requested"
+
+    updates: dict[str, Any] = {}
+    best = state.get("best_version")
+    if best is None or failed < best["failed_tests"]:
+        best = {"code_version": version, "failed_tests": failed,
+                "artifacts": state.get("generated_artifacts", []), "report": report}
+        updates["best_version"] = best
+
+    # Regression guard: when no further correction will run, deliver the version with the
+    # fewest failures rather than the latest one (an LLM "fix" can make things worse).
+    final_round = failed == 0 or attempts >= MAX_CORRECTION_ATTEMPTS
+    if final_round and best["code_version"] != version and best["failed_tests"] < failed:
+        report = {**best["report"],
+                  "reverted_from_version": version,
+                  "summary": f"Reverted to code_v{best['code_version']} "
+                             f"({best['failed_tests']} failing checks) because code_v{version} "
+                             f"had {failed}. " + best["report"].get("summary", "")}
+        recorder.log(execution_id,
+                     f"Regression guard: code_v{version} has {failed} failing checks; "
+                     f"delivering code_v{best['code_version']} "
+                     f"({best['failed_tests']} failing) instead.",
+                     LogLevel.WARNING, "orchestrator")
+        updates.update(generated_artifacts=best["artifacts"],
+                       code_version=best["code_version"])
+        failed = best["failed_tests"]
+
     recorder.update_agent_output(run_id, report)
-    return {"review_report": report,
-            "test_results": {"iteration": attempts, "passed": passed, "failed": failed,
-                             "skipped": skipped},
+    return {**updates,
+            "review_report": report,
+            "test_results": {"iteration": attempts, "passed": report["passed_tests"],
+                             "failed": failed, "skipped": report["skipped_tests"]},
             "current_agent": "review_testing",
             "execution_logs": [f"review iteration {attempts}"]}
 
@@ -240,6 +271,7 @@ def _approval_summary(checkpoint: str, state: AgentForgeState) -> dict[str, Any]
                 "question": "Approve executing the generated test suite?"}
     return {"passed_tests": review.get("passed_tests"), "failed_tests": review.get(
         "failed_tests"), "skipped_tests": review.get("skipped_tests"),
+        "critical_review_issues": review.get("critical_issues", 0),
         "correction_attempts": state.get("correction_attempts", 0),
         "code_version": state.get("code_version"),
         "question": "Approve the final code artifacts for delivery and documentation?"}

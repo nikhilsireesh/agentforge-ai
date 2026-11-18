@@ -28,6 +28,8 @@ class AgentForgeState(TypedDict, total=False):
     review_report: dict[str, Any]
     test_results: dict[str, Any]
     correction_attempts: int
+    # Version with the fewest failing checks so far (used by the regression guard).
+    best_version: dict[str, Any]
     documentation: dict[str, Any]
 
     approval_status: str

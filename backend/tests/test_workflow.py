@@ -211,3 +211,67 @@ def test_analytics_reflect_real_data(client, leave_project):
     assert executions["llm"]["total_tokens"] == 0  # mock mode uses no tokens
     assert executions["llm"]["estimated_cost_usd"] == 0
     assert executions["test_totals"]["failed"] >= 1  # the injected defect, really detected
+
+
+def test_critical_review_opinion_alone_does_not_trigger_correction(client, leave_project,
+                                                                  settings, monkeypatch):
+    from app.agents import AGENTS
+
+    monkeypatch.setattr(settings, "mock_inject_defect", False)
+    reviewer = AGENTS["review_testing"]
+    original = reviewer.mock_output
+
+    def with_critical(ctx):
+        output = original(ctx)
+        output["issues"].append({"id": "ISS-99", "severity": "critical", "category": "scope",
+                                 "file_path": None, "description": "No authentication.",
+                                 "recommendation": "Add auth."})
+        return output
+
+    monkeypatch.setattr(reviewer, "mock_output", with_critical)
+    execution_id = execute(client, leave_project["id"])
+    for _ in range(4):
+        approve(client, execution_id)
+    current = state(client, execution_id)
+    assert current["correction_attempts"] == 0
+    assert current["pending_approval"]["checkpoint"] == "deployment"
+    assert current["pending_approval"]["summary"]["critical_review_issues"] == 1
+
+
+def test_regression_guard_delivers_best_version(client, leave_project, settings, monkeypatch):
+    from app.agents import AGENTS
+
+    monkeypatch.setattr(settings, "mock_inject_defect", False)
+    developer = AGENTS["developer"]
+    original = developer.mock_output
+
+    def regressing(ctx):
+        output = original(ctx)
+        broken = ["app/main.py"] if ctx["code_version"] == 1 else ["app/main.py", "app/models.py"]
+        for artifact in output["artifacts"]:
+            if artifact["file_path"] in broken:
+                artifact["content"] += "\nBROKEN = undefined_name\n"
+        return output
+
+    monkeypatch.setattr(developer, "mock_output", regressing)
+    execution_id = execute(client, leave_project["id"])
+    seen, final = run_to_completion(client, execution_id)
+    assert final["status"] == "completed"
+    assert final["correction_attempts"] == 2
+    review = final["outputs"]["review_testing"]
+    assert review["code_version"] == 1 and review["reverted_from_version"] == 3
+    assert review["failed_tests"] == 1
+
+    logs = client.get(f"/api/executions/{execution_id}/logs").json()
+    assert any("Regression guard" in log["message"] for log in logs)
+
+    package = client.get(f"/api/executions/{execution_id}/package")
+    archive = zipfile.ZipFile(io.BytesIO(package.content))
+    assert '"code_version": 1' in archive.read("manifest.json").decode()
+
+    artifacts = client.get(f"/api/projects/{leave_project['id']}/artifacts",
+                           params={"latest_only": False}).json()
+    approved = {a["metadata_json"]["code_version"] for a in artifacts
+                if a["metadata_json"].get("category") == "code"
+                and a["approval_status"] == "approved"}
+    assert approved == {1}

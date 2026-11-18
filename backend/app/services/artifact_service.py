@@ -69,7 +69,10 @@ def delivery_package(db: Session, execution_id: int) -> tuple[str, bytes]:
     execution = get_execution(db, execution_id)
     info = execution_detail(db, execution_id)
     review = info.outputs.get("review_testing") or {}
-    code_version = (info.outputs.get("developer") or {}).get("code_version")
+    # The reviewed version is the one delivered (after a regression-guard revert it is
+    # not necessarily the newest one).
+    code_version = review.get("code_version") or (info.outputs.get("developer") or {}).get(
+        "code_version")
     manifest = {
         "project": execution.project.name,
         "execution_id": execution.id,

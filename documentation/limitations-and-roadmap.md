@@ -4,7 +4,7 @@
 
 | Area | Limitation |
 |---|---|
-| Verification | Docker image builds, the sandbox runner against a real Docker daemon, and live-LLM runs were **not executed in the development environment** (no Docker, no API key). They are covered by unit tests with mocks (command flags, JUnit parsing, timeouts, LLM HTTP transport, retries) and by CI's Docker build job. |
+| LLM quality | Verified live with Gemini `gemini-3.1-flash-lite` (a small, fast model): it produces valid structured output but writes thin test suites (≈3 tests). Larger models should produce better code and tests. Free-tier Gemini models are sometimes overloaded (HTTP 503); the agent retry policy absorbs short outages. |
 | Mock mode | Rule-based keyword heuristics. Useful for demos and development, but not intelligent: reviewer feedback is recorded but not semantically applied. Everything is labelled *mock*. |
 | Generated software | The mock generator, and the live Developer prompt, target a FastAPI service with in-memory storage and no auth, so it can be tested offline. It is a prototype, not production code. Live-LLM code quality varies by model. |
 | Sandbox packages | Generated code can only use fastapi, pydantic, pytest and httpx (pre-installed; no network at test time). |

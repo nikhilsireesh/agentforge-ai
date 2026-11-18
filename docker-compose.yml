@@ -14,6 +14,11 @@ services:
       - path: backend/.env
         required: false
     environment:
+      # Storage paths are pinned to the persistent /data volume; they override the
+      # local-development paths in backend/.env.
+      DATABASE_URL: sqlite:////data/agentforge.db
+      CHECKPOINT_DB_PATH: /data/checkpoints.db
+      GENERATED_PROJECTS_DIR: /data/generated_projects
       APP_ENV: production
       SANDBOX_MODE: disabled
       CORS_ORIGINS: http://localhost:8080
