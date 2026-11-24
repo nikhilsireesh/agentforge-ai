@@ -26,7 +26,7 @@ Everything shown in the UI comes from real execution. Workflow states, agent tim
 | **Honest mock mode** | With no API key, agents use transparent rule-based logic. All output is labelled *mock*, and the first code version contains a labelled, intentional defect so the correction loop can be demonstrated. |
 | **Enterprise UI** | React + Tailwind dashboard with 13 screens: React Flow workflow graph, live logs, code viewer with syntax highlighting, Markdown docs, Recharts analytics. |
 | **Security** | Optional JWT auth with RBAC, PBKDF2 password hashing, prompt-injection separation, path-traversal protection, rate limiting, body-size limits, audit logging. |
-| **Quality** | 69 backend tests (pytest), 2 Playwright end-to-end tests covering the full demo, Ruff linting, Alembic migrations, GitHub Actions CI. |
+| **Quality** | 73 backend tests (pytest), 2 Playwright end-to-end tests covering the full demo, Ruff linting, Alembic migrations, GitHub Actions CI. |
 
 ---
 
@@ -105,6 +105,12 @@ docker build -t agentforge-sandbox:latest -f docker/sandbox.Dockerfile docker
 
 With `SANDBOX_MODE=auto` (the default), the backend detects the image and runs generated tests inside it. The container has no network access, runs as a non-root user on a read-only filesystem with CPU, memory and process limits, and is killed if it exceeds its timeout.
 
+### Deploy a public demo (Render, free)
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/nikhilsireesh/agentforge-ai)
+
+One Docker web service, running in mock mode by default. Free-plan limits and how to enable a real LLM safely are in [deployment](documentation/deployment.md).
+
 ### Run everything with Docker Compose
 
 ```bash
@@ -120,7 +126,7 @@ In Compose the sandbox is disabled on purpose, because it would require mounting
 ```bash
 cd backend && source .venv/bin/activate
 ruff check .                           # lint
-pytest                                 # 69 tests: API, workflow, agents, security
+pytest                                 # 73 tests: API, workflow, agents, security
 alembic check                          # models and migrations in sync
 
 cd ../frontend
@@ -185,5 +191,5 @@ Details: [documentation/testing.md](documentation/testing.md).
 - [x] **Week 3 — Validation & automation:** review and testing agent, static checks, Docker sandbox runner, conditional routing, controlled correction, five approval checkpoints
 - [x] **Week 4 — Delivery:** documentation agent and 11 delivery documents, artifact storage and zip export, analytics, Dockerfiles, Compose, CI, Playwright E2E, documentation
 
-**Verified in this environment:** backend tests (69), lint, migrations, frontend build, Playwright E2E (2), a live-server run including a restart while a workflow was paused for approval, all three Docker images, the Compose stack (through nginx), and the Docker sandbox. In the sandbox run, generated pytest caught the injected defect (25 passed, 1 failed), and all 26 passed after correction. A hostile test file confirmed there is no network, the filesystem is read-only, the user is non-root, and no host secrets are visible.
+**Verified in this environment:** backend tests (73), lint, migrations, frontend build, Playwright E2E (2), a live-server run including a restart while a workflow was paused for approval, all three Docker images, the Compose stack (through nginx), and the Docker sandbox. In the sandbox run, generated pytest caught the injected defect (25 passed, 1 failed), and all 26 passed after correction. A hostile test file confirmed there is no network, the filesystem is read-only, the user is non-root, and no host secrets are visible.
 **Live LLM:** full workflows verified end-to-end on Google Gemini (`gemini-3.1-flash-lite`) through its OpenAI-compatible endpoint, with generated tests executed in the Docker sandbox. The first live run exposed an unnecessary correction loop that degraded working code. It was fixed with a regression guard, and automatic correction now runs only on real test failures (see the commit history).

@@ -84,3 +84,4 @@ jobs:
       - run: docker build -f docker/backend.Dockerfile -t agentforge-backend .
       - run: docker build -f docker/frontend.Dockerfile -t agentforge-frontend .
       - run: docker build -f docker/sandbox.Dockerfile -t agentforge-sandbox:latest docker
+      - run: docker build -f docker/render.Dockerfile -t agentforge-web .

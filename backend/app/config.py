@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     checkpoint_db_path: str = "./checkpoints.db"
     generated_projects_dir: Path = BACKEND_DIR.parent / "generated_projects"
 
+    # Single-service deployments (e.g. Render): serve the built React app from this folder.
+    # Unset locally, where Vite serves the frontend, and in Compose, where nginx does.
+    frontend_dist_dir: Path | None = None
+
     # --- HTTP ---
     cors_origins: str = "http://localhost:5173"
     max_request_body_bytes: int = 1_000_000
