@@ -45,7 +45,7 @@ Nodes: `requirement_analyst`, `approval_requirements`, `research`, `solution_arc
 | any approval node | rejected | END (execution *cancelled*, reason recorded) |
 | `developer` | code not yet approved | `approval_code` |
 | `developer` | code approved (correction loop) | `review_testing` |
-| `review_testing` | checks failed or critical issue, and attempts < 2 | `correction` → `developer` |
+| `review_testing` | checks failed, and attempts < 2 | `correction` → `developer` |
 | `review_testing` | passed, or 2 attempts used | `approval_deployment` (failures visible to the reviewer) |
 
 **How approvals work.** An approval node calls `interrupt(payload)`. LangGraph saves a checkpoint to `checkpoints.db` and returns. The runner sees `snapshot.next`, creates a pending `approvals` row and marks the execution `waiting_approval`. When a reviewer decides, the API atomically updates the row with a conditional UPDATE, so double-clicks can't both win. It then resumes the same thread with `Command(resume={decision, feedback})`. Nothing with side effects runs before `interrupt()`, because LangGraph re-runs the node from the top on resume.

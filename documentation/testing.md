@@ -4,7 +4,7 @@
 
 | Suite | Command | Covers |
 |---|---|---|
-| Backend unit/integration (65 tests) | `cd backend && pytest` | Models and constraints; project/requirement CRUD, search, pagination; full workflow through the API (all 5 checkpoints, correction loop, docs, zip); revision and rejection routing; edited requirements flowing downstream; cancellation and conflicts; second domain (inventory); analytics; auth/RBAC; rate limiting; path traversal; prompt wrapping; LLM client (mock HTTP transport); agent retries with a fake LLM; static checks; JUnit parsing; sandbox timeout handling; Docker command hardening |
+| Backend unit/integration (69 tests) | `cd backend && pytest` | Models and constraints; project/requirement CRUD, search, pagination; full workflow through the API (all 5 checkpoints, correction loop, docs, zip); revision and rejection routing; edited requirements flowing downstream; cancellation and conflicts; second domain (inventory); analytics; auth/RBAC; rate limiting; path traversal; prompt wrapping; LLM client (mock HTTP transport, backoff on provider overload); agent retries with a fake LLM; static checks; JUnit parsing; sandbox timeout handling; Docker command hardening |
 | Lint | `cd backend && ruff check .` | pyflakes, pycodestyle, import order, bugbear, pyupgrade |
 | Migrations | `cd backend && alembic upgrade head && alembic check` | Migrations apply and match the models |
 | Frontend build | `cd frontend && npm run build` | Compiles all pages |
@@ -21,5 +21,5 @@ Set `E2E_SCREENSHOTS=/some/folder` to save a screenshot of every demo step.
 
 1. **Static checks** (always run, never execute code): every `.py` file is parsed with `ast`, Ruff runs with rules `E9,F63,F7,F82` (syntax errors and undefined names), and the presence of test files is checked.
 2. **pytest in the Docker sandbox**, only after the *test execution* checkpoint is approved. Results are read from the JUnit XML report.
-3. Any failed or errored check, or a critical review issue, triggers **controlled correction** (at most two). Each iteration's results are stored separately (`test_results.iteration`).
+3. Any failed or errored check triggers **controlled correction** (at most two). Critical review findings are shown to the reviewer at the final-delivery checkpoint but do not trigger automatic correction on their own, because rewriting working code on the strength of an LLM opinion caused regressions in live runs. If a correction makes things worse, a regression guard delivers the best version instead. Each iteration's results are stored separately (`test_results.iteration`).
 4. If Docker is unavailable, the suite is recorded as **skipped**, and the UI, test report and final report all say so.

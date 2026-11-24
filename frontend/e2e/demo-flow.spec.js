@@ -5,7 +5,10 @@ import { expect, test } from "@playwright/test";
 const SHOTS = process.env.E2E_SCREENSHOTS;
 
 async function shot(page, name) {
-  if (SHOTS) await page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: true });
+  if (!SHOTS) return;
+  await page.mouse.move(0, 0); // no hover styles in screenshots
+  await page.waitForTimeout(400); // let CSS colour transitions finish
+  await page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: true });
 }
 
 function nav(page, name) {

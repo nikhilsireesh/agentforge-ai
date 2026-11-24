@@ -90,15 +90,17 @@ def test_developer_output_requires_tests():
     assert "test_" in str(info.value)
 
 
-def _client(handler) -> LLMClient:
+def _client(handler, sleeps: list | None = None) -> LLMClient:
     settings = Settings(llm_api_key=SecretStr("sk-test-secret"), llm_base_url="https://llm.test/v1")
-    return LLMClient(settings, transport=httpx.MockTransport(handler))
+    record = sleeps if sleeps is not None else []
+    return LLMClient(settings, transport=httpx.MockTransport(handler), sleep=record.append)
 
 
 def test_llm_client_parses_json_and_usage():
     def handler(request: httpx.Request):
         body = json.loads(request.content)
         assert body["response_format"] == {"type": "json_object"}
+        assert "reasoning_effort" not in body  # only sent when configured
         assert request.headers["authorization"] == "Bearer sk-test-secret"
         return httpx.Response(200, json={
             "choices": [{"message": {"content": '{"ok": true}'}}],
@@ -117,6 +119,56 @@ def test_llm_client_errors_never_leak_key():
         _client(handler).chat_json("sys", "user")
     assert "sk-test-secret" not in str(info.value)
     assert "500" in str(info.value)
+
+
+def test_llm_client_backs_off_on_transient_overload():
+    calls = []
+
+    def handler(request):
+        calls.append(1)
+        if len(calls) < 3:
+            return httpx.Response(503, json={"error": "model overloaded"})
+        return httpx.Response(200, json={"choices": [{"message": {"content": '{"ok": true}'}}]})
+
+    sleeps: list[float] = []
+    response = _client(handler, sleeps).chat_json("sys", "user")
+    assert response.data == {"ok": True}
+    assert len(calls) == 3 and sleeps == [2.0, 5.0]
+
+
+def test_llm_client_does_not_retry_client_errors():
+    calls = []
+
+    def handler(request):
+        calls.append(1)
+        return httpx.Response(401, text="bad key")
+
+    sleeps: list[float] = []
+    with pytest.raises(LLMError):
+        _client(handler, sleeps).chat_json("sys", "user")
+    assert len(calls) == 1 and sleeps == []
+
+
+def test_llm_client_reports_truncated_output():
+    def handler(request):
+        return httpx.Response(200, json={"choices": [
+            {"message": {"content": '{"files": [{"pa'}, "finish_reason": "length"}]})
+
+    with pytest.raises(LLMError, match="truncated"):
+        _client(handler).chat_json("sys", "user")
+
+
+def test_llm_client_sends_reasoning_effort_when_configured():
+    seen = {}
+
+    def handler(request):
+        seen.update(json.loads(request.content))
+        return httpx.Response(200, json={"choices": [{"message": {"content": '{"ok": true}'}}]})
+
+    settings = Settings(llm_api_key=SecretStr("k"), llm_base_url="https://llm.test/v1",
+                        llm_reasoning_effort="low")
+    LLMClient(settings, transport=httpx.MockTransport(handler)).chat_json("sys", "user")
+    assert seen["reasoning_effort"] == "low"
 
 
 def test_llm_client_rejects_non_json():

@@ -26,7 +26,21 @@ Everything shown in the UI comes from real execution. Workflow states, agent tim
 | **Honest mock mode** | With no API key, agents use transparent rule-based logic. All output is labelled *mock*, and the first code version contains a labelled, intentional defect so the correction loop can be demonstrated. |
 | **Enterprise UI** | React + Tailwind dashboard with 13 screens: React Flow workflow graph, live logs, code viewer with syntax highlighting, Markdown docs, Recharts analytics. |
 | **Security** | Optional JWT auth with RBAC, PBKDF2 password hashing, prompt-injection separation, path-traversal protection, rate limiting, body-size limits, audit logging. |
-| **Quality** | 65 backend tests (pytest), 2 Playwright end-to-end tests covering the full demo, Ruff linting, Alembic migrations, GitHub Actions CI. |
+| **Quality** | 69 backend tests (pytest), 2 Playwright end-to-end tests covering the full demo, Ruff linting, Alembic migrations, GitHub Actions CI. |
+
+---
+
+## Screenshots
+
+Captured automatically by the Playwright E2E test (mock mode, Employee Leave Management demo). All 14 steps are in [docs/screenshots](docs/screenshots).
+
+| Workflow Monitor: LangGraph run with the correction loop | Testing Center: injected defect caught, final approval |
+|---|---|
+| ![Workflow Monitor](docs/screenshots/10-workflow-complete.png) | ![Testing Center](docs/screenshots/07-testing-initial-failure.png) |
+| **Architecture: human approval checkpoint** | **Code Artifacts: generated files awaiting review** |
+| ![Architecture](docs/screenshots/05-architecture.png) | ![Code Artifacts](docs/screenshots/06-code.png) |
+| **Requirements: stated, inferred and assumed requirements** | **Analytics: metrics from real executions** |
+| ![Requirements](docs/screenshots/04-requirements.png) | ![Analytics](docs/screenshots/12-analytics.png) |
 
 ---
 
@@ -70,6 +84,17 @@ LLM_OUTPUT_COST_PER_1M=0.60
 
 The top bar switches from **Mock LLM mode** to **Live · model-name**, and token usage and estimated cost appear in Analytics.
 
+**Google Gemini** (free tier, used for the verified live runs) works through its OpenAI-compatible endpoint:
+
+```env
+LLM_API_KEY=your-gemini-key            # from Google AI Studio
+LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai
+LLM_MODEL=gemini-3.1-flash-lite
+LLM_TIMEOUT_SECONDS=180
+```
+
+Reasoning models such as `gemini-3.6-flash` spend part of the output budget on hidden "thinking" tokens, which can truncate the Developer agent's large JSON answer. Set `LLM_REASONING_EFFORT=low` for these models. The client reports truncation explicitly, and it retries provider overload and rate-limit errors (429/5xx) with backoff.
+
 ### 4. (Optional) Test sandbox
 
 Install Docker Desktop, then build the sandbox image once:
@@ -95,7 +120,7 @@ In Compose the sandbox is disabled on purpose, because it would require mounting
 ```bash
 cd backend && source .venv/bin/activate
 ruff check .                           # lint
-pytest                                 # 65 tests: API, workflow, agents, security
+pytest                                 # 69 tests: API, workflow, agents, security
 alembic check                          # models and migrations in sync
 
 cd ../frontend
@@ -160,5 +185,5 @@ Details: [documentation/testing.md](documentation/testing.md).
 - [x] **Week 3 — Validation & automation:** review and testing agent, static checks, Docker sandbox runner, conditional routing, controlled correction, five approval checkpoints
 - [x] **Week 4 — Delivery:** documentation agent and 11 delivery documents, artifact storage and zip export, analytics, Dockerfiles, Compose, CI, Playwright E2E, documentation
 
-**Verified in this environment:** backend tests (63), lint, migrations, frontend build, Playwright E2E (2), a live-server run including a restart while a workflow was paused for approval, all three Docker images, the Compose stack (through nginx), and the Docker sandbox. In the sandbox run, generated pytest caught the injected defect (25 passed, 1 failed), and all 26 passed after correction. A hostile test file confirmed there is no network, the filesystem is read-only, the user is non-root, and no host secrets are visible.
+**Verified in this environment:** backend tests (69), lint, migrations, frontend build, Playwright E2E (2), a live-server run including a restart while a workflow was paused for approval, all three Docker images, the Compose stack (through nginx), and the Docker sandbox. In the sandbox run, generated pytest caught the injected defect (25 passed, 1 failed), and all 26 passed after correction. A hostile test file confirmed there is no network, the filesystem is read-only, the user is non-root, and no host secrets are visible.
 **Live LLM:** full workflows verified end-to-end on Google Gemini (`gemini-3.1-flash-lite`) through its OpenAI-compatible endpoint, with generated tests executed in the Docker sandbox. The first live run exposed an unnecessary correction loop that degraded working code. It was fixed with a regression guard, and automatic correction now runs only on real test failures (see the commit history).

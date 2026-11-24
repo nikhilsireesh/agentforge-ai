@@ -58,6 +58,9 @@ class Settings(BaseSettings):
     # Some newer models require "max_completion_tokens" instead of "max_tokens".
     llm_max_tokens_param: Literal["max_tokens", "max_completion_tokens"] = "max_tokens"
     llm_temperature: float | None = 0.2
+    # Reasoning models (e.g. Gemini 3.x Flash) spend output budget on hidden "thinking";
+    # "low" leaves room for large JSON answers. Unset = provider default, not sent.
+    llm_reasoning_effort: Literal["none", "low", "medium", "high"] | None = None
     # Prices used ONLY to estimate cost from real token counts. Verify with your provider.
     llm_input_cost_per_1m: float = Field(default=0.0, ge=0)
     llm_output_cost_per_1m: float = Field(default=0.0, ge=0)
@@ -83,6 +86,11 @@ class Settings(BaseSettings):
     @classmethod
     def empty_temperature_is_none(cls, value: object) -> object:
         return None if value in ("", "none", "None") else value
+
+    @field_validator("llm_reasoning_effort", mode="before")
+    @classmethod
+    def empty_reasoning_effort_is_none(cls, value: object) -> object:
+        return None if value == "" else value
 
     @property
     def cors_origin_list(self) -> list[str]:

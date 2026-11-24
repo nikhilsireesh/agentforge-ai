@@ -29,4 +29,4 @@
 - Built **AgentForge AI**, a multi-agent software delivery platform (FastAPI, LangGraph, React). Six specialised LLM agents turn natural-language business requirements into validated specs, architecture, code, tests and documentation.
 - Designed a **LangGraph state machine** with typed shared state, SQLite checkpointing, conditional routing, a bounded self-correction loop and **five human-in-the-loop approval gates** that survive server restarts.
 - Implemented **safe execution of AI-generated code**: static analysis plus pytest inside a network-less, non-root, read-only, resource-limited Docker sandbox, with results parsed from JUnit and never fabricated.
-- Hardened the platform against **prompt injection, path traversal and SSRF**, added JWT/RBAC, rate limiting and audit logging, and backed it with 65 pytest tests, Playwright E2E tests and GitHub Actions CI.
+- Hardened the platform against **prompt injection, path traversal and SSRF**, added JWT/RBAC, rate limiting and audit logging, and backed it with 69 pytest tests, Playwright E2E tests and GitHub Actions CI.
