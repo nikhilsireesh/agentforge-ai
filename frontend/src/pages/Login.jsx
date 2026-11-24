@@ -1,4 +1,4 @@
-import { Bot, Eye, EyeOff, Lock, Mail, PlayCircle, User } from "lucide-react";
+import { Bot, Eye, EyeOff, Lock, Mail, User } from "lucide-react";
 import { useState } from "react";
 import { Button, ErrorBanner } from "../components/ui";
 import { useAuth } from "../context/AuthContext";
@@ -20,31 +20,28 @@ function IconInput({ icon: Icon, label, children }) {
 }
 
 export default function Login() {
-  const { login, register, demoLogin, system } = useAuth();
+  const { login, register } = useAuth();
   const [mode, setMode] = useState("login");
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
-  const [busy, setBusy] = useState(null); // "form" | "demo" | null
+  const [busy, setBusy] = useState(false);
 
   const isLogin = mode === "login";
   const set = (key) => (event) => setForm({ ...form, [key]: event.target.value });
 
-  const run = async (kind, action) => {
-    setBusy(kind);
+  const submit = async (event) => {
+    event.preventDefault();
+    setBusy(true);
     setError(null);
     try {
-      await action();
+      if (isLogin) await login(form.email, form.password);
+      else await register(form.name, form.email, form.password);
     } catch (err) {
       setError(errorMessage(err));
     } finally {
-      setBusy(null);
+      setBusy(false);
     }
-  };
-
-  const submit = (event) => {
-    event.preventDefault();
-    run("form", () => (isLogin ? login(form.email, form.password) : register(form.name, form.email, form.password)));
   };
 
   const switchMode = (next) => {
@@ -125,32 +122,10 @@ export default function Login() {
 
             <ErrorBanner error={error} />
 
-            <Button type="submit" size="lg" loading={busy === "form"} disabled={busy !== null} className="w-full">
+            <Button type="submit" size="lg" loading={busy} className="w-full">
               {isLogin ? "Sign in" : "Create account"}
             </Button>
           </form>
-
-          {system?.demo_login_enabled && (
-            <>
-              <div className="my-6 flex items-center gap-3 text-xs text-slate-400">
-                <span className="h-px flex-1 bg-slate-200" /> or <span className="h-px flex-1 bg-slate-200" />
-              </div>
-              <Button
-                variant="secondary"
-                size="lg"
-                icon={PlayCircle}
-                loading={busy === "demo"}
-                disabled={busy !== null}
-                onClick={() => run("demo", demoLogin)}
-                className="w-full"
-              >
-                Try the demo, no sign-up
-              </Button>
-              <p className="mt-2 text-center text-xs text-slate-500">Signs you in as a shared guest reviewer who can run and approve workflows.</p>
-            </>
-          )}
-
-          {!isLogin && <p className="mt-6 text-center text-xs text-slate-400">The first account created becomes the administrator.</p>}
         </div>
       </main>
     </div>

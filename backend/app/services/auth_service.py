@@ -23,9 +23,6 @@ logger = logging.getLogger(__name__)
 
 PBKDF2_ITERATIONS = 600_000
 DEMO_USER_EMAIL = "demo@agentforge.local"
-GUEST_USER_EMAIL = "guest@agentforge.local"
-# Built-in accounts that can never sign in with a password.
-_SYSTEM_EMAILS = (DEMO_USER_EMAIL, GUEST_USER_EMAIL)
 _ephemeral_secret: str | None = None
 
 
@@ -87,8 +84,7 @@ def decode_access_token(token: str) -> int | None:
 
 def register_user(db: Session, name: str, email: str, password: str) -> User:
     """Create a user. The very first registered user becomes an admin."""
-    existing = db.scalar(
-        select(func.count(User.id)).where(User.email.not_in(_SYSTEM_EMAILS))) or 0
+    existing = db.scalar(select(func.count(User.id)).where(User.email != DEMO_USER_EMAIL)) or 0
     is_first = existing == 0
     user = User(
         name=name,
@@ -103,7 +99,7 @@ def register_user(db: Session, name: str, email: str, password: str) -> User:
 
 def authenticate(db: Session, email: str, password: str) -> User | None:
     user = db.scalar(select(User).where(User.email == email.strip().lower()))
-    if user is None or user.email in _SYSTEM_EMAILS:
+    if user is None or user.email == DEMO_USER_EMAIL:
         # Still hash to keep response time similar for unknown emails.
         verify_password(password, hash_password("timing-equalizer"))
         return None
@@ -119,25 +115,6 @@ def get_or_create_demo_user(db: Session) -> User:
             email=DEMO_USER_EMAIL,
             password_hash=hash_password(secrets.token_urlsafe(32)),
             role=UserRole.ADMIN,
-        )
-        db.add(user)
-        db.commit()
-    return user
-
-
-def get_or_create_guest_user(db: Session) -> User:
-    """Shared reviewer account behind the "Try the demo" button (DEMO_LOGIN_ENABLED).
-
-    Reviewer, not admin: guests can run and approve workflows, nothing more.
-    Its password is random and password login is refused for it.
-    """
-    user = db.scalar(select(User).where(User.email == GUEST_USER_EMAIL))
-    if user is None:
-        user = User(
-            name="Guest Reviewer",
-            email=GUEST_USER_EMAIL,
-            password_hash=hash_password(secrets.token_urlsafe(32)),
-            role=UserRole.REVIEWER,
         )
         db.add(user)
         db.commit()

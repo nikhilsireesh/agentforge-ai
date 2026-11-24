@@ -1,9 +1,8 @@
 # Render Blueprint: one-click deploy of AgentForge AI as a single web service.
 # Deploy: https://render.com/deploy?repo=https://github.com/nikhilsireesh/agentforge-ai
 #
-# Defaults are safe for a public demo: a login page with a one-click "Try the demo"
-# guest reviewer, mock LLM mode (no API key, no cost) and the test sandbox disabled
-# (no Docker inside the host). The free plan has no persistent
+# Defaults: login required (sign in / create account), mock LLM mode (no API key,
+# no cost) and the test sandbox disabled (no Docker inside the host). The free plan has no persistent
 # disk, so the SQLite data resets when the service restarts or sleeps.
 services:
   - type: web
@@ -22,8 +21,6 @@ services:
       - key: RATE_LIMIT_PER_MINUTE
         value: "30"
       - key: AUTH_ENABLED
-        value: "true"
-      - key: DEMO_LOGIN_ENABLED
         value: "true"
       - key: JWT_SECRET
         generateValue: true

@@ -71,38 +71,6 @@ def test_auth_endpoints_disabled_by_default(client):
     assert client.get("/api/auth/me").json()["role"] == "admin"  # demo user
 
 
-def test_demo_login_gives_guest_reviewer(client, settings, monkeypatch):
-    monkeypatch.setattr(settings, "auth_enabled", True)
-    # Off unless DEMO_LOGIN_ENABLED=true.
-    assert client.post("/api/auth/demo").status_code == 404
-    assert client.get("/api/system/status").json()["demo_login_enabled"] is False
-
-    monkeypatch.setattr(settings, "demo_login_enabled", True)
-    assert client.get("/api/system/status").json()["demo_login_enabled"] is True
-    guest = client.post("/api/auth/demo").json()
-    assert guest["user"]["role"] == "reviewer"  # can approve, is not admin
-    headers = {"Authorization": f"Bearer {guest['access_token']}"}
-    project = client.post("/api/projects", headers=headers, json={
-        "name": "Guest project", "requirement": "Build a simple task tracker with tasks."}).json()
-    execution = client.post(f"/api/projects/{project['id']}/execute", headers=headers).json()
-    assert client.post(f"/api/executions/{execution['id']}/approve",
-                       headers=headers).status_code == 200
-    # Same shared account every time; it can never be used with a password.
-    assert client.post("/api/auth/demo").json()["user"]["id"] == guest["user"]["id"]
-    assert client.post("/api/auth/login", json={
-        "email": "guest@agentforge.local", "password": "anything"}).status_code == 401
-    # The guest account doesn't take the "first user becomes admin" slot.
-    first = client.post("/api/auth/register", json={
-        "name": "Owner", "email": "owner@example.com", "password": "supersecret1"}).json()
-    assert first["user"]["role"] == "admin"
-
-
-def test_demo_login_requires_auth_enabled(client, settings, monkeypatch):
-    monkeypatch.setattr(settings, "demo_login_enabled", True)
-    assert client.post("/api/auth/demo").status_code == 400
-    assert client.get("/api/system/status").json()["demo_login_enabled"] is False
-
-
 def test_rate_limit(client, settings, monkeypatch):
     monkeypatch.setattr(settings, "rate_limit_per_minute", 2)
     rate_limiter.reset()
