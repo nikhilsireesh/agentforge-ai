@@ -58,6 +58,7 @@ def system_status(
         llm_mode=settings.llm_mode,
         llm_model=settings.llm_model,
         auth_enabled=settings.auth_enabled,
+        demo_login_enabled=settings.auth_enabled and settings.demo_login_enabled,
         mock_inject_defect=settings.mock_inject_defect,
         cost_per_1m_input=settings.llm_input_cost_per_1m,
         cost_per_1m_output=settings.llm_output_cost_per_1m,

@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     # Disabled by default for local demos: every request acts as a built-in demo admin.
     auth_enabled: bool = False
     jwt_secret: SecretStr | None = None
+    # Public demos: a "Try the demo" button signs visitors in as a shared guest reviewer,
+    # so they can run the whole workflow without registering. Requires AUTH_ENABLED=true.
+    demo_login_enabled: bool = False
     jwt_expire_minutes: int = Field(default=480, ge=5)
 
     # --- Workflow execution ---

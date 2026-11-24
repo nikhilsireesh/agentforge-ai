@@ -50,6 +50,12 @@ export function AuthProvider({ children }) {
     setUser(result.user);
   };
 
+  const demoLogin = async () => {
+    const result = await Api.demoLogin();
+    setToken(result.access_token);
+    setUser(result.user);
+  };
+
   const logout = () => {
     setToken(null);
     setUser(null);
@@ -59,7 +65,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ system, user, ready, backendError, login, register, logout, refresh, canApprove }}
+      value={{ system, user, ready, backendError, login, register, demoLogin, logout, refresh, canApprove }}
     >
       {children}
     </AuthContext.Provider>

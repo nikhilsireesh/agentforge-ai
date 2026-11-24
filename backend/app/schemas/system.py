@@ -28,6 +28,7 @@ class SystemStatusResponse(BaseModel):
     llm_mode: Literal["live", "mock"]
     llm_model: str
     auth_enabled: bool
+    demo_login_enabled: bool = False
     mock_inject_defect: bool
     cost_per_1m_input: float
     cost_per_1m_output: float

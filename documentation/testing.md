@@ -4,7 +4,7 @@
 
 | Suite | Command | Covers |
 |---|---|---|
-| Backend unit/integration (73 tests) | `cd backend && pytest` | Models and constraints; project/requirement CRUD, search, pagination; full workflow through the API (all 5 checkpoints, correction loop, docs, zip); revision and rejection routing; edited requirements flowing downstream; cancellation and conflicts; second domain (inventory); analytics; auth/RBAC; rate limiting; path traversal; prompt wrapping; LLM client (mock HTTP transport, backoff on provider overload); agent retries with a fake LLM; static checks; JUnit parsing; sandbox timeout handling; Docker command hardening |
+| Backend unit/integration (75 tests) | `cd backend && pytest` | Models and constraints; project/requirement CRUD, search, pagination; full workflow through the API (all 5 checkpoints, correction loop, docs, zip); revision and rejection routing; edited requirements flowing downstream; cancellation and conflicts; second domain (inventory); analytics; auth/RBAC and demo guest login; rate limiting; path traversal; prompt wrapping; LLM client (mock HTTP transport, backoff on provider overload); agent retries with a fake LLM; static checks; JUnit parsing; sandbox timeout handling; Docker command hardening |
 | Lint | `cd backend && ruff check .` | pyflakes, pycodestyle, import order, bugbear, pyupgrade |
 | Migrations | `cd backend && alembic upgrade head && alembic check` | Migrations apply and match the models |
 | Frontend build | `cd frontend && npm run build` | Compiles all pages |

@@ -11,11 +11,12 @@ The `render.yaml` Blueprint creates one free Docker web service from `docker/ren
 
 Public-demo defaults:
 
+- **Login page enabled.** Visitors can create an account or click **Try the demo** to sign in as a shared *Guest Reviewer* who can run and approve workflows. Register your own account first: the first registered account becomes the administrator.
 - **Mock LLM mode.** No API key is set, so visitors can't spend your LLM quota.
 - **Sandbox disabled.** Render can't run Docker inside a service, so generated pytest runs are reported as *skipped*; static checks still run.
 - **Free-plan limits.** The service sleeps after about 15 minutes idle (the first request then takes about a minute), and there is no persistent disk, so projects reset on restart. For persistence, switch to a paid plan, add a disk mounted at `/data`, and keep the defaults.
 
-To use a real LLM on a public URL, set `AUTH_ENABLED=true` first (a `JWT_SECRET` is already generated), then add `LLM_API_KEY`, `LLM_BASE_URL` and `LLM_MODEL` in the service's **Environment** tab. Without auth, anyone with the link could use up your quota.
+To use a real LLM on a public URL, set `DEMO_LOGIN_ENABLED=false` (otherwise anyone can sign in as the guest), then add `LLM_API_KEY`, `LLM_BASE_URL` and `LLM_MODEL` in the service's **Environment** tab. Bear in mind that anyone can still register, so watch your provider's usage.
 
 
 ## Docker Compose (single host)

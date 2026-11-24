@@ -17,6 +17,7 @@ os.environ.update({
     "LLM_API_KEY": "",
     "SANDBOX_MODE": "disabled",
     "AUTH_ENABLED": "false",
+    "DEMO_LOGIN_ENABLED": "false",
     "CHECKPOINT_DB_PATH": ":memory:",
     "GENERATED_PROJECTS_DIR": os.path.join(_TMP, "generated"),
     "RATE_LIMIT_PER_MINUTE": "1000",

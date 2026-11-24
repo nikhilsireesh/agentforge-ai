@@ -72,6 +72,7 @@ export const Api = {
   me: () => data(http.get("/api/auth/me")),
   login: (email, password) => data(http.post("/api/auth/login", { email, password })),
   register: (name, email, password) => data(http.post("/api/auth/register", { name, email, password })),
+  demoLogin: () => data(http.post("/api/auth/demo")),
 
   // projects & requirements
   listProjects: (params) => data(http.get("/api/projects", { params })),

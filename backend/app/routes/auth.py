@@ -39,6 +39,17 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse
                          user=UserRead.model_validate(user))
 
 
+@router.post("/demo", response_model=TokenResponse, dependencies=[Depends(rate_limit("auth"))],
+             summary="Sign in as the shared guest reviewer (public demos only)")
+def demo_login(db: Session = Depends(get_db)) -> TokenResponse:
+    _require_auth_enabled()
+    if not get_settings().demo_login_enabled:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Demo login is disabled.")
+    user = auth_service.get_or_create_guest_user(db)
+    return TokenResponse(access_token=auth_service.create_access_token(user),
+                         user=UserRead.model_validate(user))
+
+
 @router.get("/me", response_model=UserRead)
 def me(user: User = Depends(get_current_user)) -> User:
     return user
