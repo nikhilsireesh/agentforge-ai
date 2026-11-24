@@ -1,15 +1,8 @@
-import { Bot, Eye, EyeOff, FlaskConical, GitBranch, Lock, Mail, PlayCircle, ShieldCheck, User, UserCheck } from "lucide-react";
+import { Bot, Eye, EyeOff, Lock, Mail, PlayCircle, User } from "lucide-react";
 import { useState } from "react";
 import { Button, ErrorBanner } from "../components/ui";
 import { useAuth } from "../context/AuthContext";
 import { errorMessage } from "../services/api";
-
-const HIGHLIGHTS = [
-  { icon: Bot, title: "Six specialised AI agents", text: "Requirements, research, architecture, code, testing and documentation." },
-  { icon: UserCheck, title: "Five human approval gates", text: "Nothing moves forward until a reviewer approves it." },
-  { icon: FlaskConical, title: "Real, sandboxed testing", text: "Generated tests run in an isolated container. Results are never invented." },
-  { icon: GitBranch, title: "LangGraph orchestration", text: "Checkpointed workflows that survive restarts, with bounded self-correction." },
-];
 
 const fieldBase =
   "w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-violet-400 focus:outline-none focus:ring-4 focus:ring-violet-100 transition";
@@ -61,40 +54,14 @@ export default function Login() {
 
   return (
     <div className="flex min-h-full bg-white">
-      {/* Product story (hidden on small screens) */}
-      <aside className="relative hidden w-[46%] flex-col justify-between overflow-hidden bg-gradient-to-br from-violet-700 via-violet-600 to-indigo-700 p-12 text-white lg:flex">
+      {/* Brand panel (hidden on small screens) */}
+      <aside className="relative hidden w-[46%] items-center justify-center overflow-hidden bg-gradient-to-br from-violet-700 via-violet-600 to-indigo-700 p-12 text-white lg:flex">
         <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-white/10 blur-2xl" />
         <div aria-hidden className="pointer-events-none absolute -bottom-32 -left-16 h-96 w-96 rounded-full bg-indigo-400/20 blur-3xl" />
-
-        <div className="relative flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25"><Bot size={20} /></div>
-          <div>
-            <p className="font-semibold">AgentForge AI</p>
-            <p className="text-xs text-violet-200">Multi-agent delivery</p>
-          </div>
+        <div className="relative flex items-center gap-4">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25"><Bot size={32} /></div>
+          <p className="text-4xl font-semibold tracking-tight">AgentForge AI</p>
         </div>
-
-        <div className="relative max-w-md">
-          <h2 className="text-3xl font-semibold leading-tight tracking-tight">From business requirements to working software, powered by AI agents.</h2>
-          <p className="mt-3 text-sm leading-relaxed text-violet-100">
-            Describe what you need in plain language. A supervised team of AI agents analyses, designs, builds, tests and documents it, with you approving every key step.
-          </p>
-          <ul className="mt-8 space-y-5">
-            {HIGHLIGHTS.map(({ icon: Icon, title, text }) => (
-              <li key={title} className="flex gap-3">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10 ring-1 ring-white/20"><Icon size={17} /></span>
-                <span>
-                  <span className="block text-sm font-medium">{title}</span>
-                  <span className="block text-sm text-violet-200">{text}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <p className="relative flex items-center gap-2 text-xs text-violet-200">
-          <ShieldCheck size={14} /> JWT authentication · role-based access · PBKDF2 password hashing
-        </p>
       </aside>
 
       {/* Sign-in form */}
@@ -102,10 +69,7 @@ export default function Login() {
         <div className="w-full max-w-sm">
           <div className="mb-8 flex items-center gap-3 lg:hidden">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-600 text-white"><Bot size={20} /></div>
-            <div>
-              <p className="font-semibold text-slate-900">AgentForge AI</p>
-              <p className="text-xs text-slate-500">Multi-agent delivery</p>
-            </div>
+            <p className="text-lg font-semibold text-slate-900">AgentForge AI</p>
           </div>
 
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{isLogin ? "Welcome back" : "Create your account"}</h1>
